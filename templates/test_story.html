@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Story</title>
+    <script>
+        async function generateStory(event) {
+            event.preventDefault();
+            const keywords = document.getElementById('keywords').value;
+            const response = await fetch('/api/storyrequest/generate_story/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ keywords: keywords }),
+            });
+
+            const data = await response.json();
+            document.getElementById('result').innerText = data.story || 'Error generating story';
+        }
+    </script>
+</head>
+<body>
+    <h1>Generate a Story using OpenAI</h1>
+    <form onsubmit="generateStory(event)">
+        <label for="keywords">Keywords:</label>
+        <input type="text" id="keywords" name="keywords" required>
+        <button type="submit">Generate Story</button>
+    </form>
+    <h2>Generated Story:</h2>
+    <pre id="result"></pre>
+</body>
+</html>
