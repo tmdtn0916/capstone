@@ -1,10 +1,12 @@
-from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework import viewsets, status
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from .models import StoryRequest
-from .serializers import StoryRequestSerializer
+from .models import StoryRequest, User
+from .serializers import StoryRequestSerializer, UserSerializer
 from openai import OpenAI
-import openai
+import openai, logging
+
+logger = logging.getLogger(__name__)
 
 class StoryRequestViewSet(viewsets.ModelViewSet):
     queryset = StoryRequest.objects.all()
@@ -62,4 +64,16 @@ class StoryRequestViewSet(viewsets.ModelViewSet):
             print(e)
             return Response({'error': str(e)}, status=500)
         
+
+
+@api_view(['POST'])
+def user_signup(request):
+    logger.debug("Received data: %s", request.data)
+    if request.method == 'POST':
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'success'}, status=status.HTTP_201_CREATED)
+        logger.debug("Errors: %s", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
