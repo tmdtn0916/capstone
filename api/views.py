@@ -1,10 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from .models import StoryRequest, User
+from .models import StoryRequest
 from .serializers import StoryRequestSerializer, UserSerializer
 from openai import OpenAI
 import openai, logging
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 logger = logging.getLogger(__name__)
 
@@ -75,5 +77,20 @@ def user_signup(request):
             serializer.save()
             return Response({'status': 'success'}, status=status.HTTP_201_CREATED)
         logger.debug("Errors: %s", serializer.errors)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
+
+@api_view(['POST'])
+def user_login(request):
+    logger.debug("Received data: %s", request.data)
+
+    email = request.data.get('email')
+    password = request.data.get('password')
+    user = authenticate(request, email=email, password = password)
+
+    if user is not None:
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token' : token.key}, status=status.HTTP_200_OK)
+    else:
+        return Response({'error' : 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
